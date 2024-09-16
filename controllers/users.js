@@ -1,5 +1,5 @@
-const User = require("../models/user.js");
-const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors.js");
+const User = require("../models/user");
+const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
   User.find({})

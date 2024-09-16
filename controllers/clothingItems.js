@@ -1,7 +1,7 @@
-const ClothingItems = require("../models/clothingItems.js");
-const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors.js");
+const ClothingItems = require("../models/clothingItems");
+const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors");
 
-getItems = (req, res) => {
+module.exports.getItems = (req, res) => {
   ClothingItems.find({})
     .then((items) => res.status(200).send(items))
     .catch((err) => {
@@ -12,7 +12,7 @@ getItems = (req, res) => {
     });
 };
 
-createItem = (req, res) => {
+module.exports.createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
   ClothingItems.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => res.status(201).send(item))
@@ -27,7 +27,7 @@ createItem = (req, res) => {
     });
 };
 
-deleteItem = (req, res) => {
+module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
   ClothingItems.findByIdAndRemove(itemId)
     .orFail()
@@ -46,7 +46,7 @@ deleteItem = (req, res) => {
     });
 };
 
-likeItem = (req, res) => {
+module.exports.likeItem = (req, res) => {
   ClothingItems.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
@@ -68,7 +68,7 @@ likeItem = (req, res) => {
     });
 };
 
-dislikeItem = (req, res) => {
+module.exports.dislikeItem = (req, res) => {
   console.log("unliking an item");
   console.log(req.params);
   ClothingItems.findByIdAndUpdate(
@@ -91,5 +91,3 @@ dislikeItem = (req, res) => {
         .send({ message: "An error has occurred on the server." });
     });
 };
-
-module.exports = { getItems, createItem, deleteItem, likeItem, dislikeItem };

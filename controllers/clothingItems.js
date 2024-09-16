@@ -3,7 +3,7 @@ const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
   ClothingItems.find({})
-    .then((items) => res.status(200).send(items))
+    .then((items) => res.send(items))
     .catch((err) => {
       console.error(err);
       return res
@@ -19,7 +19,7 @@ module.exports.createItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
+        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
       return res
         .status(SERVER_ERROR)
@@ -31,14 +31,14 @@ module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
   ClothingItems.findByIdAndRemove(itemId)
     .orFail()
-    .then((item) => res.status(200).send(item))
+    .then((item) => res.send(item))
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
+        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
+        return res.status(NOT_FOUND).send({ message: "Not found." });
       }
       return res
         .status(SERVER_ERROR)
@@ -53,14 +53,14 @@ module.exports.likeItem = (req, res) => {
     { new: true }
   )
     .orFail()
-    .then((item) => res.status(200).send(item))
+    .then((item) => res.send(item))
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
+        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
+        return res.status(NOT_FOUND).send({ message: "Not found." });
       }
       return res
         .status(SERVER_ERROR)
@@ -77,14 +77,14 @@ module.exports.dislikeItem = (req, res) => {
     { new: true }
   )
     .orFail()
-    .then((item) => res.status(200).send(item))
+    .then((item) => res.send(item))
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
+        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
+        return res.status(NOT_FOUND).send({ message: "Not found." });
       }
       return res
         .status(SERVER_ERROR)

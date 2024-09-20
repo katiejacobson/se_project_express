@@ -1,5 +1,14 @@
 const User = require("../models/user");
-const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors");
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  SERVER_ERROR,
+  DUPLICATE_EMAIL,
+  UNAUTHORIZED,
+} = require("../utils/errors");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = require("../utils/config");
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -32,8 +41,17 @@ module.exports.getUser = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, avatar } = req.body;
-  User.create({ name, avatar })
+  const { name, avatar, email, password } = req.body;
+  User.findOne({ email })
+    .then((user) => {
+      if (user) {
+        const emailError = new Error("Email already exists");
+        emailError.name = "DuplicateEmail";
+        throw emailError;
+      }
+      return bcrypt.hash(password, 10);
+    })
+    .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => res.status(201).send(user))
     .catch((err) => {
       console.error(err);
@@ -41,8 +59,31 @@ module.exports.createUser = (req, res) => {
       if (err.name === "ValidationError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
+      if (err.name === "DuplicateEmail") {
+        return res
+          .status(DUPLICATE_EMAIL)
+          .send({ message: "Email already exists" });
+      }
       return res
         .status(SERVER_ERROR)
         .send({ message: "An error has occurred on the server." });
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  console.log(req.body);
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      console.log(token);
+      res.status(200).send({ token });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(UNAUTHORIZED).send({ message: err.message });
     });
 };

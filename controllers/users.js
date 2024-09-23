@@ -55,8 +55,13 @@ module.exports.createUser = (req, res) => {
     })
     .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => {
-      user.password = undefined;
-      res.status(201).send({ user });
+      const userObj = user.toObject();
+      delete userObj.password;
+      res.status(201).send({ user: userObj });
+      // console.log(user);
+      // user.password = undefined;
+      // console.log(user);
+      // res.status(201).send({ user });
     })
     .catch((err) => {
       console.error(err);
@@ -92,7 +97,7 @@ module.exports.login = (req, res) => {
       if (err.name === "ValidationError" || err.name === "Error") {
         return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
-      res.status(UNAUTHORIZED).send({ message: err.message });
+      return res.status(UNAUTHORIZED).send({ message: err.message });
     });
 };
 

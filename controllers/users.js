@@ -12,36 +12,6 @@ const { JWT_SECRET } = require("../utils/config");
 
 const opts = { runValidators: true, new: true };
 
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.send(users))
-    .catch((err) => {
-      console.error(err);
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
-};
-
-module.exports.getUser = (req, res) => {
-  const { userId } = req.params;
-  User.findById(userId)
-    .orFail()
-    .then((user) => res.send(user))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Not found." });
-      }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
-};
-
 module.exports.createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
   User.findOne({ email })
@@ -58,10 +28,6 @@ module.exports.createUser = (req, res) => {
       const userObj = user.toObject();
       delete userObj.password;
       res.status(201).send({ user: userObj });
-      // console.log(user);
-      // user.password = undefined;
-      // console.log(user);
-      // res.status(201).send({ user });
     })
     .catch((err) => {
       console.error(err);
@@ -83,7 +49,9 @@ module.exports.createUser = (req, res) => {
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
   console.log(req.body);
-
+  if (!email || !password) {
+    return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+  }
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
@@ -94,10 +62,16 @@ module.exports.login = (req, res) => {
     .catch((err) => {
       console.log(err);
       console.log(err.name);
-      if (err.name === "ValidationError" || err.name === "Error") {
+      console.log(err.message);
+      if (err.name === "ValidationError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid data." });
       }
-      return res.status(UNAUTHORIZED).send({ message: err.message });
+      if (err.message === "Wrong email or password") {
+        return res.status(UNAUTHORIZED).send({ message: err.message });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 

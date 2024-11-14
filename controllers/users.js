@@ -2,24 +2,21 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  SERVER_ERROR,
-  DUPLICATE_EMAIL,
-  UNAUTHORIZED,
+  BadRequestError,
+  UnauthorizedError,
+  NotFoundError,
+  ConflictError,
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
 const opts = { runValidators: true, new: true };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
   User.findOne({ email })
     .then((user) => {
       if (user) {
-        const emailError = new Error("Email already exists");
-        emailError.name = "DuplicateEmail";
-        throw emailError;
+        throw new ConflictError("Email already exists");
       }
       return bcrypt.hash(password, 10);
     })
@@ -30,27 +27,22 @@ module.exports.createUser = (req, res) => {
       res.status(201).send({ user: userObj });
     })
     .catch((err) => {
-      console.error(err);
-      console.log(err.name);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
+        next(new BadRequestError("Invalid data"));
       }
       if (err.name === "DuplicateEmail") {
-        return res
-          .status(DUPLICATE_EMAIL)
-          .send({ message: "Email already exists" });
+        next(new ConflictError("Email already exists"));
+      } else {
+        next(err);
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   console.log(req.body);
   if (!email || !password) {
-    return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+    throw new BadRequestError("Invalid data");
   }
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -64,18 +56,17 @@ module.exports.login = (req, res) => {
       console.log(err.name);
       console.log(err.message);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
+        next(new BadRequestError("Invalid data"));
       }
       if (err.message === "Wrong email or password") {
-        return res.status(UNAUTHORIZED).send({ message: err.message });
+        next(new UnauthorizedError("Wrong email or password"));
+      } else {
+        next(err);
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
   const userId = req.user._id;
 
   User.findById(userId)
@@ -84,18 +75,17 @@ module.exports.getCurrentUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
+        next(new BadRequestError("Invalid data"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Not found." });
+        next(new NotFoundError("Not found"));
+      } else {
+        next(err);
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, avatar } = req.body;
   const userId = req.user._id;
 
@@ -107,16 +97,15 @@ module.exports.updateUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
+        next(new BadRequestError("Invalid data"));
       }
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data." });
+        next(new BadRequestError("Invalid data"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Not found." });
+        next(new NotFoundError("Not found"));
+      } else {
+        next(err);
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };

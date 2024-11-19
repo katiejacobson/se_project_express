@@ -1,12 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const {
-  BadRequestError,
-  UnauthorizedError,
-  NotFoundError,
-  ConflictError,
-} = require("../utils/errors");
+const { BadRequestError } = require("../utils/errors/bad-request-error");
+const { NotFoundError } = require("../utils/errors/not-found-error");
+const { UnauthorizedError } = require("../utils/errors/unauthorized-error");
+const { ConflictError } = require("../utils/errors/conflict-error");
 const { JWT_SECRET } = require("../utils/config");
 
 const opts = { runValidators: true, new: true };
@@ -40,7 +38,6 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-  console.log(req.body);
   if (!email || !password) {
     throw new BadRequestError("Invalid data");
   }
@@ -53,8 +50,6 @@ module.exports.login = (req, res, next) => {
     })
     .catch((err) => {
       console.log(err);
-      console.log(err.name);
-      console.log(err.message);
       if (err.name === "ValidationError") {
         next(new BadRequestError("Invalid data"));
       }

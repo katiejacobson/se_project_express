@@ -9,10 +9,6 @@ const {
 const auth = require("../middlewares/auth");
 const {
   validateClothingItem,
-  validateUserCreationInfo,
-  validateUserLoginInfo,
-  validateUserId,
-  validateItemId,
   validateId,
 } = require("../middlewares/validation");
 

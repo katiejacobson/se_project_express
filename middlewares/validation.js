@@ -56,20 +56,16 @@ module.exports.validateUserLoginInfo = celebrate({
   }),
 });
 
-module.exports.validateUserId = celebrate({
+module.exports.validateUserUpdateInfo = celebrate({
   body: Joi.object().keys({
-    userId: Joi.string().length(24).hex().messages({
-      "string.length": "The ID must be 24 characters in length",
-      "string.hex": "The ID must be a hexadecimal string",
+    name: Joi.string().required().min(2).max(30).messages({
+      "string.min": 'The minimum length of the "name" field is 2',
+      "string.max": 'The maximum length of the "name" field is 30',
+      "string.empty": 'The "name" field must be filled in',
     }),
-  }),
-});
-
-module.exports.validateItemId = celebrate({
-  body: Joi.object().keys({
-    itemId: Joi.string().length(24).hex().messages({
-      "string.length": "The ID must be 24 characters in length",
-      "string.hex": "The ID must be a hexadecimal string",
+    avatar: Joi.string().required().custom(validateUrl).messages({
+      "string.empty": 'The "imageUrl" field must be filled in',
+      "string.uri": 'The "imageUrl" field must be a valid url',
     }),
   }),
 });
@@ -77,10 +73,6 @@ module.exports.validateItemId = celebrate({
 module.exports.validateId = celebrate({
   params: Joi.object().keys({
     itemId: Joi.string().length(24).hex().messages({
-      "string.length": "The ID must be 24 characters in length",
-      "string.hex": "The ID must be a hexadecimal string",
-    }),
-    userId: Joi.string().length(24).hex().messages({
       "string.length": "The ID must be 24 characters in length",
       "string.hex": "The ID must be a hexadecimal string",
     }),
